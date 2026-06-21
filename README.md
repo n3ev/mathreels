@@ -1,6 +1,6 @@
 # MathReels - proof of concept
 
-A "math reels" web app for **Mathologists**: a TikTok-style vertical feed of NSW ATAR
+A "math reels" web app for "myself": a TikTok-style vertical feed of NSW ATAR
 exam questions where students don't just pick an answer - they **walk through the
 solution** one step at a time. Think *ChessReels, but for HSC maths*.
 
