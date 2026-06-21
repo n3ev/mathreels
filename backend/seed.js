@@ -210,16 +210,44 @@ const questions = [
     title: "Solve an exponential",
     keyConcept: "Powers of a common base",
     prompt: "Solve $2^x = 16$.",
-    scratchpad: false,
+    scratchpad: true,
     final_answer: "$x = 4$",
-    explanation: "$16 = 2^4$, so $x = 4$.",
+    explanation: "$16 = 2^4$, so $2^x = 2^4$ and therefore $x = 4$.",
+    concept: {
+      kind: "exponential",
+      title: "The idea: matching powers",
+      captions: [
+        "An exponential like 2^x doubles every time x rises by 1.",
+        "So 2^1=2, 2^2=4, 2^3=8, 2^4=16. It climbs fast.",
+        "To solve 2^x = 16, find where the curve reaches 16.",
+        "16 is exactly 2^4, so the curve passes through (4, 16).",
+        "Same base means equal exponents, so x = 4."
+      ],
+      takeaway: "If $a^x = a^k$ then $x = k$. Rewrite both sides as powers of the same base, then match the exponents.",
+      worked: {
+        title: "Quick example first",
+        problem: "Solve $3^x = 81$.",
+        steps: [
+          "Write 81 as a power of 3: $81 = 3^4$.",
+          "So $3^x = 3^4$. The bases match, so the exponents must match.",
+          "$x = 4$. The one below works the same way."
+        ]
+      }
+    },
     steps: [
       {
         kind: "mcq",
-        prompt: "What is $x$?",
-        options: ["$4$", "$8$", "$2$", "$3$"],
+        prompt: "First step: rewrite $16$ as a power of $2$.",
+        options: ["$2^4$", "$2^3$", "$2^8$", "$4^2$"],
         correctIndex: 0,
-        hint: "Write $16$ as a power of $2$.",
+        hint: "Keep doubling: $2, 4, 8, 16$. How many doublings?",
+        explanation: "$2 \\times 2 \\times 2 \\times 2 = 16$, so $16 = 2^4$."
+      },
+      {
+        kind: "text",
+        prompt: "Now $2^x = 2^4$. Match the exponents and type $x$.",
+        accepted: ["4", "x=4"],
+        hint: "Same base means the powers are equal.",
         explanation: "$2^x = 2^4 \\Rightarrow x = 4$."
       }
     ]
@@ -233,9 +261,15 @@ const questions = [
     final_answer: "$3x^2\\sin x + x^3\\cos x$",
     explanation: "With $u = x^3$ and $v = \\sin x$: $u' = 3x^2$, $v' = \\cos x$, so $y' = u'v + uv' = 3x^2\\sin x + x^3\\cos x$.",
     concept: {
-      // No animation - for the product rule, seeing it applied beats intuition.
+      kind: "product",
       title: "The idea: the product rule",
-      captions: [],
+      captions: [
+        "Picture a rectangle of width u and height v. Its area is u times v.",
+        "Nudge x a little: the width grows by du and the height by dv.",
+        "That adds two strips: v·du down the side and u·dv along the top.",
+        "The tiny corner du·dv is negligible, so we drop it.",
+        "So the rate of change of uv is u'v + uv'. That is the product rule."
+      ],
       takeaway: "Product rule: if $y = uv$ then $\\dfrac{dy}{dx} = u'v + uv'$. Label the two factors, differentiate each, then combine.",
       worked: {
         title: "Watch it applied first",

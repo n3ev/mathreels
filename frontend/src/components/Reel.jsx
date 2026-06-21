@@ -7,7 +7,7 @@ import WorkedExample from "./WorkedExample.jsx";
 import { api } from "../api.js";
 
 // Which concept "kinds" have a hand-built canvas animation.
-const ANIMATABLE = new Set(["tangent", "area"]);
+const ANIMATABLE = new Set(["tangent", "area", "exponential", "product"]);
 
 // Different colours of chalk per course - like a real classroom board.
 const courseColors = {

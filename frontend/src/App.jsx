@@ -31,7 +31,7 @@ export default function App() {
           <span className="logo">∑</span>
           <div>
             <div className="brand-name">MathReels</div>
-            <div className="brand-sub">by Mathologists · NSW ATAR</div>
+            <div className="brand-sub">by Neev</div>
           </div>
         </div>
         <div className="stat-pills">

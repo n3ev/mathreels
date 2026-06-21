@@ -1,7 +1,9 @@
 // Animated "idea" shown before a question - ChessReels-style: teach, then test.
-// Two hand-built canvas animations so far:
-//   kind: "tangent" - a secant line slides until it becomes the tangent (derivative)
-//   kind: "area"    - rectangles get thinner until they fill the area (integral)
+// Hand-built canvas animations so far:
+//   kind: "tangent"     - a secant line slides until it becomes the tangent (derivative)
+//   kind: "area"        - rectangles get thinner until they fill the area (integral)
+//   kind: "exponential" - y = 2^x climbs and crosses y = 16 at x = 4 (solving 2^x = 16)
+//   kind: "product"     - a rectangle grows; the added strips show (uv)' = u'v + uv'
 // Add a new `kind` by writing another draw function and registering it below.
 import { useRef, useEffect, useState } from "react";
 
@@ -149,7 +151,153 @@ function drawArea(ctx, W, H, t) {
   }
 }
 
-const RENDERERS = { tangent: drawTangent, area: drawArea };
+// ---- kind: exponential ---------------------------------------------------
+// y = 2^x climbs and we watch it cross y = 16 at x = 4 (solves 2^x = 16).
+function drawExponential(ctx, W, H, t) {
+  const xMin = -0.3, xMax = 4.7, yMin = -1.4, yMax = 18.5;
+  const f = (x) => Math.pow(2, x);
+  const m = makeMapper(W, H, xMin, xMax, yMin, yMax);
+  drawBoard(ctx, W, H);
+  drawAxes(ctx, m, xMin, xMax, yMin, yMax);
+
+  // target line y = 16
+  ctx.strokeStyle = "rgba(255,211,77,0.85)";
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([6, 5]);
+  ctx.beginPath();
+  ctx.moveTo(m.mapX(xMin), m.mapY(16));
+  ctx.lineTo(m.mapX(xMax), m.mapY(16));
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.font = "700 13px Nunito, sans-serif";
+  ctx.fillStyle = "#ffd34d";
+  ctx.fillText("y = 16", m.mapX(xMax) - 54, m.mapY(16) - 6);
+
+  // curve y = 2^x draws in as t grows
+  const e = easeInOut(Math.min(t / 0.85, 1));
+  const xNow = lerp(0, 4, e);
+  ctx.strokeStyle = GREEN;
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  let started = false;
+  for (let x = xMin; x <= xNow + 0.0001; x += 0.02) {
+    const px = m.mapX(x), py = m.mapY(f(x));
+    started ? ctx.lineTo(px, py) : (ctx.moveTo(px, py), (started = true));
+  }
+  ctx.stroke();
+
+  // doubling dots at each integer reached so far (2, 4, 8, 16)
+  ctx.font = "700 12px Nunito, sans-serif";
+  for (let k = 1; k <= 4; k++) {
+    if (xNow + 0.001 >= k) {
+      ctx.fillStyle = k === 4 && t > 0.8 ? GREEN : INK;
+      ctx.beginPath(); ctx.arc(m.mapX(k), m.mapY(f(k)), 4.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = MUTED;
+      ctx.fillText(String(f(k)), m.mapX(k) + 7, m.mapY(f(k)) - 6);
+    }
+  }
+
+  // moving marker on the curve
+  ctx.fillStyle = GREEN;
+  ctx.beginPath(); ctx.arc(m.mapX(xNow), m.mapY(f(xNow)), 6, 0, Math.PI * 2); ctx.fill();
+
+  // readout
+  ctx.font = "700 15px Nunito, sans-serif";
+  ctx.fillStyle = INK;
+  ctx.fillText(`2^x   (x = ${xNow.toFixed(2)})`, 14, 24);
+
+  if (t > 0.85) {
+    ctx.strokeStyle = GREEN_DIM;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(m.mapX(4), m.mapY(16));
+    ctx.lineTo(m.mapX(4), m.mapY(0));
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = GREEN;
+    ctx.fillText("2^4 = 16  →  x = 4", 14, 44);
+  }
+}
+
+// ---- kind: product (product rule via a growing rectangle) ----------------
+// Area = u·v. Nudge x: width grows by du, height by dv. The added area is the
+// two strips v·du + u·dv (the corner du·dv is negligible), giving (uv)'=u'v+uv'.
+function drawProduct(ctx, W, H, t) {
+  drawBoard(ctx, W, H);
+
+  const u0 = 2.2, v0 = 1.5, duMax = 0.95, dvMax = 0.7;
+  const scale = Math.min((W - 130) / (u0 + duMax), (H - 95) / (v0 + dvMax));
+  const totalW = (u0 + duMax) * scale;
+  const totalH = (v0 + dvMax) * scale;
+  const ox = (W - totalW) / 2 + 8;
+  const oy = (H + totalH) / 2 - 4; // bottom-left corner of the rectangle
+
+  const e = easeInOut(Math.min(t / 0.9, 1));
+  const du = duMax * e, dv = dvMax * e;
+  const px = (ux) => ox + ux * scale;
+  const py = (vy) => oy - vy * scale;
+
+  // base rectangle (area uv)
+  ctx.fillStyle = "rgba(84,224,138,0.28)";
+  ctx.fillRect(px(0), py(v0), u0 * scale, v0 * scale);
+  ctx.strokeStyle = GREEN; ctx.lineWidth = 2;
+  ctx.strokeRect(px(0), py(v0), u0 * scale, v0 * scale);
+
+  // right strip v·du
+  if (du > 0.001) {
+    ctx.fillStyle = "rgba(255,211,77,0.30)";
+    ctx.fillRect(px(u0), py(v0), du * scale, v0 * scale);
+    ctx.strokeStyle = "rgba(255,211,77,0.85)";
+    ctx.strokeRect(px(u0), py(v0), du * scale, v0 * scale);
+  }
+  // top strip u·dv
+  if (dv > 0.001) {
+    ctx.fillStyle = "rgba(120,180,255,0.30)";
+    ctx.fillRect(px(0), py(v0 + dv), u0 * scale, dv * scale);
+    ctx.strokeStyle = "rgba(120,180,255,0.85)";
+    ctx.strokeRect(px(0), py(v0 + dv), u0 * scale, dv * scale);
+  }
+  // corner du·dv (negligible)
+  if (du > 0.001 && dv > 0.001) {
+    ctx.fillStyle = "rgba(251,113,133,0.30)";
+    ctx.fillRect(px(u0), py(v0 + dv), du * scale, dv * scale);
+    ctx.strokeStyle = "rgba(251,113,133,0.85)";
+    ctx.strokeRect(px(u0), py(v0 + dv), du * scale, dv * scale);
+  }
+
+  // side labels u, v
+  ctx.font = "700 14px Nunito, sans-serif";
+  ctx.fillStyle = INK;
+  ctx.fillText("u", px(u0 / 2) - 4, oy + 18);
+  ctx.save();
+  ctx.translate(ox - 16, py(v0 / 2));
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText("v", 0, 0);
+  ctx.restore();
+
+  // area labels
+  ctx.fillStyle = GREEN;
+  ctx.fillText("uv", px(u0 / 2) - 9, py(v0 / 2) + 4);
+  if (e > 0.25) {
+    ctx.font = "700 12px Nunito, sans-serif";
+    ctx.fillStyle = "#ffd34d";
+    ctx.fillText("v·du", px(u0) + (du * scale) / 2 - 14, py(v0 / 2));
+    ctx.fillStyle = "#9ec5ff";
+    ctx.fillText("u·dv", px(u0 / 2) - 13, py(v0 + dv / 2) + 4);
+  }
+
+  // readout
+  ctx.font = "700 15px Nunito, sans-serif";
+  ctx.fillStyle = t > 0.85 ? GREEN : INK;
+  ctx.fillText(t > 0.85 ? "(uv)' = u'v + uv'" : "Δ(uv) = v·du + u·dv + ...", 14, 22);
+}
+
+const RENDERERS = {
+  tangent: drawTangent,
+  area: drawArea,
+  exponential: drawExponential,
+  product: drawProduct
+};
 
 // Evenly spaced caption change points for however many captions a concept has.
 // e.g. 5 captions -> cuts at 0.2, 0.4, 0.6, 0.8 (4 boundaries between 5 slots).
