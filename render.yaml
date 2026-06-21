@@ -1,0 +1,14 @@
+# Render blueprint - deploys MathReels as one free web service.
+# Render reads this automatically when you create a "Blueprint" from the repo.
+services:
+  - type: web
+    name: mathreels
+    runtime: node
+    plan: free
+    # Build the React frontend and install the backend.
+    buildCommand: npm run build
+    # Seed a fresh SQLite DB, then start the server (which also serves the site).
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: "20"

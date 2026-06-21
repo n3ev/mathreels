@@ -1,0 +1,14 @@
+{
+  "name": "mathreels",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MathReels - a TikTok-style feed of NSW ATAR exam questions (Mathologists POC)",
+  "scripts": {
+    "build": "npm install --prefix frontend && npm run build --prefix frontend && npm install --prefix backend",
+    "seed": "npm run seed --prefix backend",
+    "start": "npm run seed --prefix backend && npm start --prefix backend"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
